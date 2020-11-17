@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define IS_NULLGOTO(list) (list->alias == NULL)
+
 typedef struct _gotolist {
   char *alias;
   char *path;
@@ -14,22 +16,28 @@ typedef struct _gotolist {
 const char *g_homedir;
 void help();
 gotolist **read_gotolist();
+void save_gotolist();
 
 gotolist **g_gotolist;
+unsigned int g_gotolist_size;
+char *g_gotolist_path = NULL;
 int main(int argc, char *argv[]) {
   char c = 0;
-  const char *alias = NULL;
+  char *alias = NULL;
   bool skip = false;
   bool do_set = false;
   bool do_clear = false;
   bool do_help = false;
   bool do_list = false;
+
+  char *new_directory = NULL; /* used in set(-s) */
   while((c = getopt(argc, argv, "s:clh")) != -1) {
     switch(c) {
       case 's':
         if (skip) {
           break;
         }
+        new_directory = strdup(optarg);
         do_set = true;
         skip = true;
         break;
@@ -51,7 +59,7 @@ int main(int argc, char *argv[]) {
     }
   }
   alias = argv[optind];
-  if (do_help || (!do_list && alias ==NULL)) {
+  if (do_help || (!do_list && alias == NULL)) {
     help();
     exit(0);
   }
@@ -66,12 +74,13 @@ int main(int argc, char *argv[]) {
   }
 
   // read or create .gotolist
-  g_gotolist = read_gotolist();
+  // g_gotolist_size is set in read_gotolist()
+  g_gotolist = read_gotolist(&g_gotolist_size);
 
   if (do_list) {
     // read goto list and print out
     // goto list is in ~/.gotolist
-    for(int i=0; g_gotolist[i]->alias != NULL; ++i) {
+    for(int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
       gotolist *cur_goto = g_gotolist[i];
       printf("\t%-6d %-16s\t%s\n", i, cur_goto->alias, cur_goto->path);
     }
@@ -79,9 +88,42 @@ int main(int argc, char *argv[]) {
   }
 
   if (do_set) {
+    // if already in gotolist, just change it
+    bool changed = false;
+    int idx = 0;
+    for(; !IS_NULLGOTO(g_gotolist[idx]); ++idx) {
+      gotolist *cur_goto = g_gotolist[idx];
+      if (strcmp(cur_goto->alias, alias) == 0) {
+        free(cur_goto->path);
+        cur_goto->path = new_directory;
+        changed = true;
+        break;
+      }
+    } // idx will be index of nullgoto in g_gotolist if changed != true
+
+    if (!changed) {
+      // if not, add new alias & directory
+      gotolist *new_goto = (gotolist *)malloc(sizeof(gotolist));
+      new_goto->alias = alias;
+      new_goto->path = new_directory;
+      gotolist *null_goto = g_gotolist[idx];
+
+      g_gotolist = realloc(g_gotolist, g_gotolist_size + strlen(alias) 
+                            + strlen(new_directory) + 2/* space & \n */);
+      g_gotolist[idx++] = new_goto;
+      g_gotolist[idx] = null_goto;
+    }
+    
+    // flush g_gotolist to file
+    save_gotolist();
+    exit(0);
+  }
+
+  if (do_clear) {
 
   }
 
+  // goto path!
 }
 
 void help() {
@@ -101,10 +143,8 @@ void help() {
   }
 }
 
-gotolist **read_gotolist() {
-
+gotolist **read_gotolist(size_t *list_size) {
   char *line = NULL;
-  char *gotolist_path = NULL;
   FILE *fp = NULL;
   size_t len = 0;
   size_t file_size = 0;
@@ -119,16 +159,16 @@ gotolist **read_gotolist() {
     exit(-1);
   }
 
-  gotolist_path = (char *)malloc(gotolist_path_length + 1);
-  memset(gotolist_path, 0, gotolist_path_length + 1);
-  snprintf(gotolist_path, gotolist_path_length + 1, "%s/.gotolist", g_homedir);
+  g_gotolist_path = (char *)malloc(gotolist_path_length + 1);
+  memset(g_gotolist_path, 0, gotolist_path_length + 1);
+  snprintf(g_gotolist_path, gotolist_path_length + 1, "%s/.gotolist", g_homedir);
 
-  printf("opening: %s\n", gotolist_path);
-  fp = fopen(gotolist_path, "r");
+  printf("opening: %s\n", g_gotolist_path);
+  fp = fopen(g_gotolist_path, "r");
   if (fp == NULL) {
     perror("fopen");
-    free(gotolist_path);
-    gotolist_path = NULL;
+    free(g_gotolist_path);
+    g_gotolist_path = NULL;
     printf("returning NULL\n");
     return NULL;
   }
@@ -140,6 +180,7 @@ gotolist **read_gotolist() {
   fseek(fp, 0, SEEK_SET);
 
   parsed_list = (gotolist **)malloc(file_size);
+  *list_size = file_size;
 
   while(getline(&line, &len, fp) != -1) {
     size_t alias_len = 0;
@@ -170,4 +211,13 @@ gotolist **read_gotolist() {
   line = NULL;
   fclose(fp);
   return parsed_list;
+}
+
+void save_gotolist() {
+  FILE *fp = NULL;
+  fp = fopen(g_gotolist_path, "w+");
+  for(int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+    fprintf(fp, "%s %s\n", g_gotolist[i]->alias, g_gotolist[i]->path);
+  }
+  fclose(fp);
 }
