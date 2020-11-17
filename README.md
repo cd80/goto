@@ -1,6 +1,8 @@
 # goto
 goto utility to stop boring cd &amp; ls
 
+![screenshot](https://github.com/cd80/goto/blob/main/screenshot.png?raw=true)
+
 # Build
 ```
 make
