@@ -2,7 +2,7 @@ all:
 	clang -o gotobin gotobin.c -O3
 
 install:
-	mv gotobin /usr/bin/
+	cp gotobin /usr/bin/
 	cat shellfunc.sh >> ~/.zshrc
 	# cat shellfunc.sh >> ~/.bashrc
 
