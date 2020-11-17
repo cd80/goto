@@ -25,6 +25,7 @@ make install
 
 # UnInstall
 ```
-rm /usr/bin/
+rm /usr/bin/gotobin
+# and remove goto() from shrc
 ```
 Figuring out how to remove function automatically from .zshrc
