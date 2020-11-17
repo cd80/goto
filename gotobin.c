@@ -133,7 +133,14 @@ int main(int argc, char *argv[]) {
     save_gotolist();
   }
   
-  // goto path!
+  // print directory for alias for shellscript
+  for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+    if (strcmp(g_gotolist[i]->alias, alias) == 0) {
+      puts(g_gotolist[i]->path);
+      exit(1); // 1 for goto return
+    }
+  }
+  exit(-1);
 }
 
 void help() {
