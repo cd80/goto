@@ -5,7 +5,7 @@ goto utility to stop boring cd &amp; ls
 
 # Usage
 ```
-usage: goto [OPTION] [ALIAS]
+usage: goto [OPTION] [ALIAS/INDEX]
 
 	-h              	Print this message
 	-l              	List aliases
