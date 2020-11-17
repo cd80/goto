@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
         exit(-1);
       }
-      memcpy(&g_gotolist, &g_gotolist[alias_num + 1], (lastidx - alias_num) * sizeof(gotolist *));
+      memcpy(&g_gotolist[alias_num], &g_gotolist[alias_num + 1], (lastidx - alias_num) * sizeof(gotolist *));
     }
     else {
       for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
