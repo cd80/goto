@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
   if (do_list) {
     // read goto list and print out
     // goto list is in ~/.gotolist
-    for(int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+    for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
       gotolist *cur_goto = g_gotolist[i];
       printf("\t%-6d %-16s\t%s\n", i, cur_goto->alias, cur_goto->path);
     }
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     // if already in gotolist, just change it
     bool changed = false;
     int idx = 0;
-    for(; !IS_NULLGOTO(g_gotolist[idx]); ++idx) {
+    for (; !IS_NULLGOTO(g_gotolist[idx]); ++idx) {
       gotolist *cur_goto = g_gotolist[idx];
       if (strcmp(cur_goto->alias, alias) == 0) {
         free(cur_goto->path);
@@ -120,9 +120,19 @@ int main(int argc, char *argv[]) {
   }
 
   if (do_clear) {
+    // find index of nullgoto
+    int lastidx = 0;
+    for (; !IS_NULLGOTO(g_gotolist[lastidx]); ++lastidx) {}
 
+    for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+      if (strcmp(g_gotolist[i]->alias, alias) == 0) {
+        memcpy(&g_gotolist[i], &g_gotolist[i+1], (lastidx - i) * sizeof(gotolist *));
+      }
+    }
+
+    save_gotolist();
   }
-
+  
   // goto path!
 }
 
@@ -138,7 +148,7 @@ void help() {
   };
 
   fprintf(stderr, "usage: goto [OPTION] [ALIAS]\n\n");
-  for(int i=0; i<sizeof(usage)/sizeof(struct command_usage); ++i) {
+  for (int i=0; i<sizeof(usage)/sizeof(struct command_usage); ++i) {
     fprintf(stderr, "\t%-16s\t%-128s\n", usage[i].option, usage[i].usage);
   }
 }
@@ -163,7 +173,6 @@ gotolist **read_gotolist(size_t *list_size) {
   memset(g_gotolist_path, 0, gotolist_path_length + 1);
   snprintf(g_gotolist_path, gotolist_path_length + 1, "%s/.gotolist", g_homedir);
 
-  printf("opening: %s\n", g_gotolist_path);
   fp = fopen(g_gotolist_path, "r");
   if (fp == NULL) {
     perror("fopen");
@@ -216,7 +225,7 @@ gotolist **read_gotolist(size_t *list_size) {
 void save_gotolist() {
   FILE *fp = NULL;
   fp = fopen(g_gotolist_path, "w+");
-  for(int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+  for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
     fprintf(fp, "%s %s\n", g_gotolist[i]->alias, g_gotolist[i]->path);
   }
   fclose(fp);
