@@ -5,6 +5,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define IS_NULLGOTO(list) (list->alias == NULL)
 
@@ -64,6 +65,21 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  bool alias_is_num = true;
+  if (!do_list) {
+    for(int i=0; alias[i]; ++i) {
+      if(!isdigit(alias[i])) { // if alias is all-digit, it's okay
+        if (!(alias[0] >= 0x41 && alias[0] <= 0x5a
+              || alias[0] >= 0x61 && alias[0] <= 0x7a)) {
+          fprintf(stderr, "alias must start with alphabet: %s", alias);
+          exit(-1);
+        }
+        alias_is_num = false;
+      }
+    }
+  }
+
+
   // https://stackoverflow.com/a/26696759/6103202
   if ((g_homedir = getenv("HOME")) == NULL) {
     g_homedir = getpwuid(getuid())->pw_dir;
@@ -89,18 +105,35 @@ int main(int argc, char *argv[]) {
 
   if (do_set) {
     // if already in gotolist, just change it
+
+    // find lastidx first
+    int lastidx = 0;
+    for (; !IS_NULLGOTO(g_gotolist[lastidx]); ++lastidx) {}
+
     bool changed = false;
     int idx = 0;
-    for (; !IS_NULLGOTO(g_gotolist[idx]); ++idx) {
-      gotolist *cur_goto = g_gotolist[idx];
-      if (strcmp(cur_goto->alias, alias) == 0) {
-        free(cur_goto->path);
-        cur_goto->path = new_directory;
-        changed = true;
-        break;
+    if (alias_is_num) {
+      unsigned int alias_num = atoi(alias);
+      if (alias_num >= lastidx) {
+        fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
+        exit(-1);
       }
-    } // idx will be index of nullgoto in g_gotolist if changed != true
-
+      gotolist *cur_goto = g_gotolist[alias_num];
+      free(cur_goto->path);
+      cur_goto->path = new_directory;
+      changed = true;
+    }
+    else {
+      for (; !IS_NULLGOTO(g_gotolist[idx]); ++idx) {
+        gotolist *cur_goto = g_gotolist[idx];
+        if (strcmp(cur_goto->alias, alias) == 0) {
+          free(cur_goto->path);
+          cur_goto->path = new_directory;
+          changed = true;
+          break;
+        }
+      } // idx will be index of nullgoto in g_gotolist if changed != true
+    }
     if (!changed) {
       // if not, add new alias & directory
       gotolist *new_goto = (gotolist *)malloc(sizeof(gotolist));
@@ -124,9 +157,19 @@ int main(int argc, char *argv[]) {
     int lastidx = 0;
     for (; !IS_NULLGOTO(g_gotolist[lastidx]); ++lastidx) {}
 
-    for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
-      if (strcmp(g_gotolist[i]->alias, alias) == 0) {
-        memcpy(&g_gotolist[i], &g_gotolist[i+1], (lastidx - i) * sizeof(gotolist *));
+    if (alias_is_num) {
+      unsigned int alias_num = atoi(alias);
+      if (alias_num >= lastidx) {
+        fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
+        exit(-1);
+      }
+      memcpy(&g_gotolist, &g_gotolist[alias_num + 1], (lastidx - alias_num) * sizeof(gotolist *));
+    }
+    else {
+      for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+        if (strcmp(g_gotolist[i]->alias, alias) == 0) {
+          memcpy(&g_gotolist[i], &g_gotolist[i + 1], (lastidx - i) * sizeof(gotolist *));
+        }
       }
     }
 
@@ -134,10 +177,24 @@ int main(int argc, char *argv[]) {
   }
   
   // print directory for alias for shellscript
-  for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
-    if (strcmp(g_gotolist[i]->alias, alias) == 0) {
-      puts(g_gotolist[i]->path);
-      exit(1); // 1 for goto return
+  int lastidx = 0;
+  for (; !IS_NULLGOTO(g_gotolist[lastidx]); ++lastidx) {}
+
+  if (alias_is_num) {
+    unsigned int alias_num = atoi(alias);
+    if (alias_num >= lastidx) {
+      fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
+      exit(-1);
+    }
+    puts(g_gotolist[alias_num]->path);
+    exit(1);
+  }
+  else {
+    for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+      if (strcmp(g_gotolist[i]->alias, alias) == 0) {
+        puts(g_gotolist[i]->path);
+        exit(1); // 1 for goto return
+      }
     }
   }
   exit(-1);
