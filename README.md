@@ -3,6 +3,16 @@ goto utility to stop boring cd &amp; ls
 
 ![screenshot](https://github.com/cd80/goto/blob/main/screenshot.png?raw=true)
 
+# Usage
+```
+usage: goto [OPTION] [ALIAS]
+
+	-h              	Print this message
+	-l              	List aliases
+	-s <directory>  	Set directory to alias
+	-c <alias>      	Clear alias
+```
+
 # Build
 ```
 make
