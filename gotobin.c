@@ -139,12 +139,12 @@ int main(int argc, char *argv[]) {
       gotolist *new_goto = (gotolist *)malloc(sizeof(gotolist));
       new_goto->alias = alias;
       new_goto->path = new_directory;
-      gotolist *null_goto = g_gotolist[idx];
+      gotolist *null_goto = g_gotolist[lastidx];
 
       g_gotolist = realloc(g_gotolist, g_gotolist_size + strlen(alias) 
                             + strlen(new_directory) + 2/* space & \n */);
-      g_gotolist[idx++] = new_goto;
-      g_gotolist[idx] = null_goto;
+      g_gotolist[lastidx++] = new_goto;
+      g_gotolist[lastidx] = null_goto;
     }
     
     // flush g_gotolist to file
