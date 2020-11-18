@@ -10,7 +10,7 @@ usage: goto [OPTION] [ALIAS/INDEX]
 	-h              	Print this message
 	-l              	List aliases
 	-s <directory>  	Set directory to alias
-	-c <alias>      	Clear alias
+	-c              	Clear alias
 ```
 
 # Build
