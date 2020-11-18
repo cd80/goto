@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     int idx = 0;
     if (alias_is_num) {
       unsigned int alias_num = atoi(alias);
-      if (alias_num >= lastidx) {
+      if (alias_num > lastidx) {
         fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
         exit(-1);
       }
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 
     if (alias_is_num) {
       unsigned int alias_num = atoi(alias);
-      if (alias_num >= lastidx) {
+      if (alias_num > lastidx) {
         fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
         exit(-1);
       }
@@ -174,6 +174,7 @@ int main(int argc, char *argv[]) {
     }
 
     save_gotolist();
+    exit(0);
   }
   
   // print directory for alias for shellscript
@@ -182,7 +183,7 @@ int main(int argc, char *argv[]) {
 
   if (alias_is_num) {
     unsigned int alias_num = atoi(alias);
-    if (alias_num >= lastidx) {
+    if (alias_num > lastidx) {
       fprintf(stderr, "alias #%d doesn't exist\n", alias_num);
       exit(-1);
     }
@@ -213,7 +214,7 @@ void help() {
 
   fprintf(stderr, "usage: goto [OPTION] [ALIAS]\n\n");
   for (int i=0; i<sizeof(usage)/sizeof(struct command_usage); ++i) {
-    fprintf(stderr, "\t%-16s\t%-128s\n", usage[i].option, usage[i].usage);
+    fprintf(stderr, "\t%-16s\t%s\n", usage[i].option, usage[i].usage);
   }
 }
 
