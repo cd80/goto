@@ -92,17 +92,7 @@ int main(int argc, char *argv[]) {
   // read or create .gotolist
   // g_gotolist_size is set in read_gotolist()
   g_gotolist = read_gotolist(&g_gotolist_size);
-
-  if (do_list) {
-    // read goto list and print out
-    // goto list is in ~/.gotolist
-    for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
-      gotolist *cur_goto = g_gotolist[i];
-      printf("\t%-6d %-16s\t%s\n", i, cur_goto->alias, cur_goto->path);
-    }
-    exit(0);
-  }
-
+  
   if (do_set) {
     // if already in gotolist, just change it
 
@@ -174,6 +164,16 @@ int main(int argc, char *argv[]) {
     }
 
     save_gotolist();
+    exit(0);
+  }
+  
+  if (do_list) {
+    // read goto list and print out
+    // goto list is in ~/.gotolist
+    for (int i=0; !IS_NULLGOTO(g_gotolist[i]); ++i) {
+      gotolist *cur_goto = g_gotolist[i];
+      printf("\t%-6d %-16s\t%s\n", i, cur_goto->alias, cur_goto->path);
+    }
     exit(0);
   }
   
